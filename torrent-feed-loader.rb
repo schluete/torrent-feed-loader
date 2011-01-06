@@ -25,10 +25,14 @@ class FeedMonitor
         url = URI.encode(item.link, '[]')
         torrent = open(url).read()
         filename = "#{@base_dir}/torrents/#{item.link.split('/')[-1]}"
-        puts "found torrent #{url}"
         open(filename, 'w+') { |fh| fh.write(torrent) }
+        download_torrent(filename)
       end
     end
+  end
+
+  # download the given torrent via btpd
+  def download_torrent(filename)
   end
 
   # returns true if the given link was fetched before
