@@ -8,13 +8,14 @@ require 'sqlite3'
 
 
 class FeedMonitor
-  attr_accessor :feedUrl
+  attr_accessor :feed_url
 
   # constructor, get the feed content
-  def initialize(feedUrl)
-    @feedUrl = feedUrl
-    @rss = SimpleRSS.parse(open(@feedUrl))
-    @db = SQLite3::Database.new('torrent-feed-loader.sqlite3')
+  def initialize(feed_url, base_dir)
+    @base_dir = base_dir
+    @feed_url = feed_url
+    @rss = SimpleRSS.parse(open(@feed_url))
+    @db = SQLite3::Database.new("#{@base_dir}/torrent-feed-loader.sqlite3")
   end
 
   # iterate over the feed items and fetch them
@@ -23,7 +24,8 @@ class FeedMonitor
       unless loadedBefore?(item.link)
         url = URI.encode(item.link, '[]')
         torrent = open(url).read()
-        filename = "torrents/#{item.link.split('/')[-1]}"
+        filename = "#{@base_dir}/torrents/#{item.link.split('/')[-1]}"
+        puts "found torrent #{url}"
         open(filename, 'w+') { |fh| fh.write(torrent) }
       end
     end
@@ -45,6 +47,7 @@ class FeedMonitor
   end
 end
 
-feedUrl = 'http://your.torrent.feed/url.rss'
-fl = FeedMonitor.new(feedUrl)
+base_dir = File.dirname(__FILE__)
+feed_url = IO.read('doc/rss-feed-link.url')
+fl = FeedMonitor.new(feed_url, base_dir)
 fl.visit_feed
