@@ -14,14 +14,13 @@ available commands
 * die(): initialize a shutdown
 * rate(up, down): set the upload-/download rate, the parameters are integers
 * add(dict): add a new torrent, the dict contains the keys "torrent", "content" and "name"
+* tget(whatTorrents, listOfTVALfields): read the given attributes for a specific set of torrents from the server
 
 * stop-all(): stop all running torrents
 * start-all(): (re)start all stopped torrents
 * stop(numOrHash): stop a running torrent
 * start(numOrHash): (re)start a stopped torrent
 * del(numOrHash): delete a specific torrent
-
-* tget(???): ???
 
 
 response status codes
@@ -51,6 +50,30 @@ torrent states
 * 4: seeding
 
 
+possible fields for the tget() command
+--------------------------------------
+*  0: IPC_TVAL_CGOT
+*  1: IPC_TVAL_CSIZE
+*  2: IPC_TVAL_DIR
+*  3: IPC_TVAL_NAME
+*  4: IPC_TVAL_NUM
+*  5: IPC_TVAL_IHASH
+*  6: IPC_TVAL_PCGOT
+*  7: IPC_TVAL_PCOUNT
+*  8: IPC_TVAL_PCCOUNT
+*  9: IPC_TVAL_PCSEEN
+* 10: IPC_TVAL_RATEDWN
+* 11: IPC_TVAL_RATEUP
+* 12: IPC_TVAL_SESSDWN
+* 13: IPC_TVAL_SESSUP
+* 14: IPC_TVAL_STATE
+* 15: IPC_TVAL_TOTDWN
+* 16: IPC_TVAL_TOTUP
+* 17: IPC_TVAL_TRERR
+* 18: IPC_TVAL_TRGOOD
+* 19: IPC_TVALCOUNT
+
+
 communication examples
 ----------------------
 
@@ -59,7 +82,6 @@ communication examples
 
 * command:  \x0c\x00\x00\x00l8:stop-alle
   response: \x0b\x00\x00\x00d4:codei0ee
-
 
 
 Bencode
@@ -83,4 +105,3 @@ Bencode
   followed by its value. All keys must be byte strings and must appear in lexicographical order. A dictionary
   that associates the values 42 and "spam" with the keys "foo" and "bar", respectively, would be encoded as
   follows: "d3:bar4:spam3:fooi42ee". (This might be easier to read by inserting some spaces: "d 3:bar 4:spam 3:foo i42e e".)
-
