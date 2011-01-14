@@ -1,0 +1,15 @@
+# configuration for the torrent feed loader 
+
+module Settings
+  TWITTER_CONSUMER_KEY = 'consumer key'
+  TWITTER_CONSUMER_SECRET = 'consumer secret'
+  TWITTER_OAUTH_TOKEN = 'oauth token'
+  TWITTER_OAUTH_SECRET = 'oauth secret'
+
+  BITLY_USERNAME = 'username'
+  BITLY_API_KEY = 'R_api_key'
+
+  FEED_URL = 'http://here/is/the/torrent/feed'
+  BASE_URL = 'http://where/is/the/download/directory'
+  DOWNLOAD_DIR = '/download/directory/on/disk'
+end
