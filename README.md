@@ -22,7 +22,7 @@ Installation and Usage
       # ./configure
       # make
 
-* copy at least the executable into the @bin@ folder in the repository root:
+* copy at least the executable into the <code>bin<code> folder in the repository root:
       # cp ./btpd/btpd ../bin 
       # cp ./cli/btcli ../bin 
       # cp ./cli/btinfo ../bin
@@ -31,4 +31,4 @@ Installation and Usage
   then run the main executable:
       # ./torrent-feed-loader.rb
   
-* the logging output gets written into the system log, e.g. <pre>/var/log/messages</pre>
+* the logging output gets written into the system log, e.g. <code>/var/log/messages</code>
