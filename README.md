@@ -27,8 +27,8 @@ Installation and Usage
       # cp ./cli/btcli ../bin 
       # cp ./cli/btinfo ../bin
 
-* finally copy the @settings.rb@ example file and modify it according to your needs,
+* finally copy the <code>settings.rb</code> example file and modify it according to your needs,
   then run the main executable:
       # ./torrent-feed-loader.rb
   
-* the logging output gets written into the system log, e.g. @/var/log/messages@
+* the logging output gets written into the system log, e.g. <pre>/var/log/messages</pre>
