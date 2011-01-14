@@ -118,7 +118,7 @@ if __FILE__ == $0
   download_dir = Settings::DOWNLOAD_DIR || raise('no download directory configuration!')
   Dir.mkdir(download_dir) unless File.directory?(download_dir)
 
-  feeds = Settings::FEED_URL || raise('no torrent feed configuration!')
+  feeds = Settings::FEEDS || raise('no torrent feed configuration!')
   feeds.each do |feed|
     fl = FeedMonitor.new(feed, download_dir)
     fl.visit_feed
