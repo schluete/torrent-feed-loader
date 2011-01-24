@@ -12,6 +12,6 @@ module Settings
   BASE_URL = 'http://where/is/the/download/directory'
   DOWNLOAD_DIR = '/download/directory/on/disk'
 
-  FEEDS = ['http://here/is/the/torrent/feed',
-           'http://another/feed/']
+  FEEDS = [{:url=>'http://here/is/the/torrent/feed'},
+           {:url=>'http://another/feed/', :title_filter=>/^only_matching_titles$/}]
 end

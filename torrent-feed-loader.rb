@@ -13,14 +13,15 @@ require 'settings'
 
 
 class FeedMonitor
-  attr_reader :feed_url
+  attr_reader :feed
   attr_reader :download_dir
 
   # constructor, get the feed content
-  def initialize(feed_url, download_dir)
+  def initialize(feed, download_dir)
     @download_dir = download_dir
-    @feed_url = feed_url
-    @rss = SimpleRSS.parse(open(@feed_url))
+    @feed = feed
+    url = feed[:url] || throw("feed url missing for feed #{feed}")
+    @rss = SimpleRSS.parse(open(url))
 
     base_dir = File.dirname(__FILE__)
     @db = SQLite3::Database.new("#{base_dir}/torrent-feed-loader.sqlite3")
@@ -28,8 +29,9 @@ class FeedMonitor
 
   # iterate over the feed items and fetch them
   def visit_feed
-    log("visiting feed #{@feed_url}")
+    log("visiting feed #{@feed[:url]}")
     @rss.items.each do |item|
+      next if @feed[:title_filter] and !(item.title=~@feed[:title_filter])
       download_torrent(item) unless loadedBefore?(item.link)
     end
   end
