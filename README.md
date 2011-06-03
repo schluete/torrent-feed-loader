@@ -1,4 +1,4 @@
-torrent-feed-loader
+torrentFeedLoader
 ===================
 
 simple collection scripts to monitor a torrent RSS feed as a cronjob, then
@@ -29,6 +29,6 @@ Installation and Usage
 
 * finally copy the <code>settings.rb</code> example file and modify it according to your needs,
   then run the main executable:
-      # ./torrent-feed-loader.rb
+      # ./torrentFeedLoader.rb
   
 * the logging output gets written into the system log, e.g. <code>/var/log/messages</code>

@@ -5,11 +5,12 @@ require 'simple-rss'
 require 'open-uri'
 require 'uri'
 require 'sqlite3'
-require 'btpd-client'
 require 'twitter'
 require 'bitly'
 require 'syslog'
-require 'settings'
+
+require_relative 'btpd-client'
+require_relative 'settings'
 
 
 class FeedMonitor
@@ -24,7 +25,7 @@ class FeedMonitor
     @rss = SimpleRSS.parse(open(url))
 
     base_dir = File.dirname(__FILE__)
-    @db = SQLite3::Database.new("#{base_dir}/torrent-feed-loader.sqlite3")
+    @db = SQLite3::Database.new("#{base_dir}/torrentFeedLoader.sqlite3")
   end
 
   # iterate over the feed items and fetch them
@@ -65,6 +66,8 @@ class FeedMonitor
     dir_after = Dir.entries(@download_dir)
     new_files = dir_after - dir_before
     tweet_files(new_files)
+  rescue Exception => ex
+    log("unable to load torrent #{item.link}: #{ex}")
   end
 
   # send a tweet with a link to each file in the given array
@@ -103,7 +106,7 @@ class FeedMonitor
 
   # helper method, write a message to the system log
   def log(msg)
-    Syslog.open($0, Syslog::LOG_PID | Syslog::LOG_CONS) { |log| log.warning(msg) }
+    Syslog.open($0, Syslog::LOG_PID | Syslog::LOG_CONS) { |log| log.warning("#{msg.gsub('%', '%%')}") }
   end
 end
 

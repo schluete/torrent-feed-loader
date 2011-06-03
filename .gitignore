@@ -1,3 +1,4 @@
 *.torrent
 *.sqlite3
 settings.rb
+Gemfile.lock
