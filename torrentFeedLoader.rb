@@ -1,13 +1,13 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require 'simple-rss'
 require 'open-uri'
 require 'uri'
 require 'sqlite3'
 require 'twitter'
 require 'bitly'
 require 'syslog'
+require 'nokogiri'
 
 require_relative 'btpd-client'
 require_relative 'settings'
@@ -21,8 +21,6 @@ class FeedMonitor
   def initialize(feed, download_dir)
     @download_dir = download_dir
     @feed = feed
-    url = feed[:url] || throw("feed url missing for feed #{feed}")
-    @rss = SimpleRSS.parse(open(url))
 
     base_dir = File.dirname(__FILE__)
     @db = SQLite3::Database.new("#{base_dir}/torrentFeedLoader.sqlite3")
@@ -31,16 +29,19 @@ class FeedMonitor
   # iterate over the feed items and fetch them
   def visit_feed
     log("visiting feed #{@feed[:url]}")
-    @rss.items.each do |item|
-      next if @feed[:title_filter] and !(item.title=~@feed[:title_filter])
-      download_torrent(item) unless loadedBefore?(item.link)
+    doc = Nokogiri::HTML(open(@feed[:url]))
+    doc.css('tr.forum_header_border').each do |node|
+      title_node = node.css('a.epinfo')[0]
+      next unless title_node
+      title = title_node[:title]
+      url = node.css('a.download_1')[0][:href]
+      download_torrent(url, title) unless loadedBefore?(url)
     end
   end
 
   # download the given torrent via btpd
-  def download_torrent(item)
+  def download_torrent(url, title)
     # first download the torrent file itself
-    url = URI.encode(item.link, '[]')
     torrent = open(url).read()
     dir_before = Dir.entries(@download_dir)
 
@@ -49,7 +50,7 @@ class FeedMonitor
     bc.start_server_if_not_running
     id = bc.add("t#{Time.now.to_i}", torrent, @download_dir)
     bc.start(id)
-    log("downloading torrent #{item.link} (##{id})")
+    log("downloading torrent #{url} (##{id})")
 
     # let's wait until the torrent is fully downloaded
     while true
@@ -67,7 +68,7 @@ class FeedMonitor
     new_files = dir_after - dir_before
     tweet_files(new_files)
   rescue Exception => ex
-    log("unable to load torrent #{item.link}: #{ex}")
+    log("unable to load torrent #{url}: #{ex}")
   end
 
   # send a tweet with a link to each file in the given array

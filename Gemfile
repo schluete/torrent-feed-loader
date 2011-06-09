@@ -6,5 +6,6 @@ gem 'simple-rss'
 gem 'twitter'
 gem 'bitly'
 gem 'bencode'
+gem 'nokogiri'
 
 gem 'whenever', :require => false
