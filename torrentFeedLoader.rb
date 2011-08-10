@@ -13,6 +13,23 @@ require_relative 'btpd-client'
 require_relative 'settings'
 
 
+# the current URI module has a bug. It can't handle square brackets
+# in URL, although that's perfectly legal. We're monkey-patching the
+# class a little bit until the bug gets fixed in the official version.
+module URI
+  class << self
+    def parse_with_safety(uri)
+      parse_without_safety(uri.gsub('[', '%5B')
+                              .gsub(']', '%5D'))
+    rescue
+      parse_without_safety(uri)
+    end
+    alias parse_without_safety parse
+    alias parse parse_with_safety
+  end
+end
+
+
 class FeedMonitor
   attr_reader :feed
   attr_reader :download_dir
@@ -56,7 +73,7 @@ class FeedMonitor
     while true
       torrents = bc.tget([Btpd::TVAL_NUM, Btpd::TVAL_STATE])
       (bc.die! ; break) if torrents.size == 0
-      
+
       torrents.each do |(num, state)|
         bc.del(num) if state == Btpd::TSTATE_SEED
       end
@@ -112,7 +129,7 @@ class FeedMonitor
 end
 
 
-# main program 
+# main program
 if __FILE__ == $0
   Twitter.configure do |config|
     config.consumer_key = Settings::TWITTER_CONSUMER_KEY
