@@ -1,4 +1,4 @@
-# configuration for the torrent feed loader 
+# configuration for the torrent feed loader
 
 module Settings
   TWITTER_CONSUMER_KEY = 'consumer key'
@@ -12,6 +12,8 @@ module Settings
   BASE_URL = 'http://where/is/the/download/directory'
   DOWNLOAD_DIR = '/download/directory/on/disk'
 
+  FEEDS = {'twitter_username' => [/^(regex to filter a show tweet)/,
+                                  /^(another show name filter)/]}
   FEEDS = [{:url=>'http://here/is/the/torrent/feed'},
            {:url=>'http://another/feed/', :title_filter=>/^only_matching_titles$/}]
 end

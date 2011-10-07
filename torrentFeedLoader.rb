@@ -13,6 +13,10 @@ require_relative 'btpd-client'
 require_relative 'settings'
 
 
+# regular expression to filter the torrent URLs from the tweets
+URL_REGEX = /((http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}((:[0-9]{1,5})?\/[^\s]*)?)/ix
+
+
 # the current URI module has a bug. It can't handle square brackets
 # in URL, although that's perfectly legal. We're monkey-patching the
 # class a little bit until the bug gets fixed in the official version.
@@ -31,13 +35,15 @@ end
 
 
 class FeedMonitor
-  attr_reader :feed
+  attr_reader :twitter_username
+  attr_reader :shows
   attr_reader :download_dir
 
   # constructor, get the feed content
-  def initialize(feed, download_dir)
+  def initialize(twitter_username, shows, download_dir)
     @download_dir = download_dir
-    @feed = feed
+    @twitter_username = twitter_username
+    @shows = shows
 
     base_dir = File.dirname(__FILE__)
     @db = SQLite3::Database.new("#{base_dir}/torrentFeedLoader.sqlite3")
@@ -45,19 +51,20 @@ class FeedMonitor
 
   # iterate over the feed items and fetch them
   def visit_feed
-    log("visiting feed #{@feed[:url]}")
-    doc = Nokogiri::HTML(open(@feed[:url]))
-    doc.css('tr.forum_header_border').each do |node|
-      title_node = node.css('a.epinfo')[0]
-      next unless title_node
-      title = title_node[:title]
-      url = node.css('a.download_1')[0][:href]
-      download_torrent(url, title) unless loadedBefore?(url)
+    log("visiting tweets of #{@twitter_username}")
+    Twitter.user_timeline(@twitter_username, :count=>100).each do |tweet|
+      @shows.each do |show|
+        if tweet.text =~ show and tweet.text =~ URL_REGEX
+          url = $1
+          log("'#{tweet.text}' at <#{url}>")
+          download_torrent(url) unless loadedBefore?(url)
+        end
+      end
     end
   end
 
   # download the given torrent via btpd
-  def download_torrent(url, title)
+  def download_torrent(url)
     # first download the torrent file itself
     torrent = open(url).read()
     dir_before = Dir.entries(@download_dir)
@@ -142,8 +149,8 @@ if __FILE__ == $0
   Dir.mkdir(download_dir) unless File.directory?(download_dir)
 
   feeds = Settings::FEEDS || raise('no torrent feed configuration!')
-  feeds.each do |feed|
-    fl = FeedMonitor.new(feed, download_dir)
+  feeds.each do |twitter_username, shows|
+    fl = FeedMonitor.new(twitter_username, shows, download_dir)
     fl.visit_feed
   end
 end
