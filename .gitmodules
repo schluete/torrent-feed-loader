@@ -1,3 +1,0 @@
-[submodule "btpd"]
-	path = btpd
-	url = https://github.com/btpd/btpd.git
