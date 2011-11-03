@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 
 require 'rubygems'
 require 'open-uri'
@@ -7,9 +8,8 @@ require 'sqlite3'
 require 'twitter'
 require 'bitly'
 require 'syslog'
-require 'nokogiri'
 
-require_relative 'btpd-client'
+require_relative 'transmission-client'
 require_relative 'settings'
 
 
@@ -45,6 +45,9 @@ class FeedMonitor
     @twitter_username = twitter_username
     @shows = shows
 
+    @client = Transmission::Client.new(Settings::TRANSMISSION_SERVER)
+    @client.start_server_if_not_running(Settings::TRANSMISSION_COMMAND)
+
     base_dir = File.dirname(__FILE__)
     @db = SQLite3::Database.new("#{base_dir}/torrentFeedLoader.sqlite3")
   end
@@ -65,42 +68,32 @@ class FeedMonitor
 
   # download the given torrent via btpd
   def download_torrent(url)
-    # first download the torrent file itself
     torrent = open(url).read()
-    dir_before = Dir.entries(@download_dir)
-
-    # then start the torrent client and start the download
-    bc = Btpd::Client.new()
-    bc.start_server_if_not_running
-    id = bc.add("t#{Time.now.to_i}", torrent, @download_dir)
-    bc.start(id)
+    id = @client.add(torrent, @download_dir)
     log("downloading torrent #{url} (##{id})")
-
-    # let's wait until the torrent is fully downloaded
-    while true
-      torrents = bc.tget([Btpd::TVAL_NUM, Btpd::TVAL_STATE])
-      (bc.die! ; break) if torrents.size == 0
-
-      torrents.each do |(num, state)|
-        bc.del(num) if state == Btpd::TSTATE_SEED
-      end
-      sleep(10)
-    end
-
-    # then send out a tweet about the new download
-    dir_after = Dir.entries(@download_dir)
-    new_files = dir_after - dir_before
-    tweet_files(new_files)
   rescue Exception => ex
     log("unable to load torrent #{url}: #{ex}")
   end
 
   # send a tweet with a link to each file in the given array
-  def tweet_files(new_files)
+  def tweet_new_files
     Bitly.use_api_version_3
     bitly = Bitly.new(Settings::BITLY_USERNAME,
                       Settings::BITLY_API_KEY)
 
+    # search for new downloaded files
+    new_files = []
+    @db.execute('create table if not exists tweets(tweet varchar primary key);')
+    Dir.entries(download_dir).each do |filename|
+      next if ['.', '..'].include?(filename) or filename =~ /\.part$/
+      begin
+        @db.execute("insert into tweets values('#{filename}');")
+        new_files << filename
+      rescue
+      end
+    end
+
+    # then tweet the files found
     new_files.each do |file|
       url = "#{Settings::BASE_URL}/#{file}"
       short_url = bitly.shorten(url).short_url
@@ -148,9 +141,22 @@ if __FILE__ == $0
   download_dir = Settings::DOWNLOAD_DIR || raise('no download directory configuration!')
   Dir.mkdir(download_dir) unless File.directory?(download_dir)
 
+  # search all feeds for new torrents
   feeds = Settings::FEEDS || raise('no torrent feed configuration!')
   feeds.each do |twitter_username, shows|
     fl = FeedMonitor.new(twitter_username, shows, download_dir)
     fl.visit_feed
   end
+
+  # check for torrents done downloading and tweet them
+  client = Transmission::Client.new(Settings::TRANSMISSION_SERVER)
+  if client.is_running?
+    client.remove_finished_torrents
+    client.shutdown if client.list == []
+  end
+
+  # search for new downloaded torrents to be tweeted
+  fl = FeedMonitor.new(nil, [], download_dir)
+  fl.tweet_new_files
 end
+

@@ -9,11 +9,13 @@ module Settings
   BITLY_USERNAME = 'username'
   BITLY_API_KEY = 'R_api_key'
 
-  BASE_URL = 'http://where/is/the/download/directory'
-  DOWNLOAD_DIR = '/download/directory/on/disk'
+  TRANSMISSION_SERVER = 'http://127.0.0.1:9091/transmission/rpc'
+  TRANSMISSION_COMMAND = '/path/to/transmission-daemon ' +
+                         '--logfile /put/here/transmission.log ' +
+                         '--log-info --rpc-bind-address 127.0.0.1'
 
   FEEDS = {'twitter_username' => [/^(regex to filter a show tweet)/,
                                   /^(another show name filter)/]}
-  FEEDS = [{:url=>'http://here/is/the/torrent/feed'},
-           {:url=>'http://another/feed/', :title_filter=>/^only_matching_titles$/}]
+  BASE_URL = 'http://where/is/the/download/directory'
+  DOWNLOAD_DIR = '/download/directory/on/disk'
 end
