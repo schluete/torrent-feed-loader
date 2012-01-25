@@ -43,7 +43,7 @@ class FeedMonitor
   def initialize(twitter_username, shows, download_dir)
     @download_dir = download_dir
     @twitter_username = twitter_username
-    @shows = shows
+    @shows = shows.map { |show| show[:feed_pattern] }
 
     @client = Transmission::Client.new(Settings::TRANSMISSION_SERVER)
     @client.start_server_if_not_running(Settings::TRANSMISSION_COMMAND)
@@ -97,7 +97,7 @@ class FeedMonitor
     new_files.each do |file|
       url = "#{Settings::BASE_URL}/#{file}"
       short_url = bitly.shorten(url).short_url
-      tweet = "#{file}: #{short_url} (#{Time.now.to_i})"
+      tweet = "#{file[0...50]}: #{short_url} (#{Time.now.to_i})"
       begin
         Twitter.update(tweet)
         log("tweet #{tweet}")
@@ -159,4 +159,3 @@ if __FILE__ == $0
   fl = FeedMonitor.new(nil, [], download_dir)
   fl.tweet_new_files
 end
-

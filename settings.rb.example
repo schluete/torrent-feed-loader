@@ -14,8 +14,27 @@ module Settings
                          '--logfile /put/here/transmission.log ' +
                          '--log-info --rpc-bind-address 127.0.0.1'
 
-  FEEDS = {'twitter_username' => [/^(regex to filter a show tweet)/,
-                                  /^(another show name filter)/]}
   BASE_URL = 'http://where/is/the/download/directory'
   DOWNLOAD_DIR = '/download/directory/on/disk'
+  ITUNES_RSS_DIR = '/download/directory/on/disk/for/itunes-podcast-rss-xml'
+
+  FEEDS = {
+    'twitter_username' => [{
+        :feed_pattern => /^(regex to filter a show tweet)/,
+        :title => 'Cleartext name of the show',
+        :subtitle => 'Some witty comment or subtitle for the show',
+        :author => 'The guy who made the show',
+        :image => 'http://where/is/the/600x600/logo.jpg',
+        :category => 'Comedy',
+        :filename_pattern => /The.Filename.Pattern.On.Disk.(.*).HDTV.*mp4/
+      }, {
+        :feed_pattern => /^(another show name filter)/,
+        :title => 'Cleartext name of the show',
+        :subtitle => 'Some witty comment or subtitle for the show',
+        :author => 'The guy who made the show',
+        :image => 'http://where/is/the/600x600/other_logo.jpg',
+        :category => 'Comedy',
+        :filename_pattern => /The.Filename.Pattern.On.Disk.(.*).HDTV.*mp4/
+      }]
+  }
 end

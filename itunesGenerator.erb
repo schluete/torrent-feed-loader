@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0">
+
+  <channel>
+    <title><%= title %></title>
+    <link>http://pqrs.de</link>
+    <language>en-us</language>
+    <copyright><%= author %></copyright>
+
+    <itunes:subtitle><%= subtitle %></itunes:subtitle>
+    <itunes:author><%= author %></itunes:author>
+    <itunes:summary><%= title %>, easily available as a feed</itunes:summary>
+    <description><%= title %>, easily available as a feed</description>
+    <itunes:owner>
+      <itunes:name><%= author %></itunes:name>
+      <itunes:email>scrooge@entenhause.com</itunes:email>
+    </itunes:owner>
+    <itunes:image href="<%= image %>"/>
+    <itunes:category text="<%= category %>">
+    </itunes:category>
+
+    <% files.each do |file| %>
+      <item>
+        <title><%= file.title %></title>
+        <itunes:author><%= author %></itunes:author>
+        <itunes:subtitle></itunes:subtitle>
+        <itunes:summary><%= file.title %></itunes:summary>
+        <itunes:image href="<%= image %>"/>
+        <enclosure url="<%= file.url %>" length="<%= file.length %>" type="video/mp4" />
+        <guid><%= file.url %></guid>
+        <pubDate><%= file.pubdate %></pubDate>
+        <itunes:duration>45:00</itunes:duration>
+        <itunes:keywords></itunes:keywords>
+    </item>
+    <% end %>
+
+  </channel>
+
+</rss>
