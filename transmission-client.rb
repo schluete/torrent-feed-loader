@@ -49,9 +49,10 @@ module Transmission
     end
 
     # add a new torrent to be downloaded
-    def add(torrent, download_dir)
+    def add(magnet, download_dir)
       request('session-set', :'download-dir' => download_dir)
-      resp = request('torrent-add', :metainfo => Base64.strict_encode64(torrent))
+      # resp = request('torrent-add', :metainfo => Base64.strict_encode64(torrent))
+      resp = request('torrent-add', :filename => magnet)
       return resp['torrent-added']['id']
     end
 
@@ -105,4 +106,3 @@ module Transmission
 
   end
 end
-

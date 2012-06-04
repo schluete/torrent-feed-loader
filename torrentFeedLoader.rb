@@ -8,6 +8,7 @@ require 'sqlite3'
 require 'twitter'
 require 'bitly'
 require 'syslog'
+require 'nokogiri'
 
 require_relative 'transmission-client'
 require_relative 'settings'
@@ -40,10 +41,9 @@ class FeedMonitor
   attr_reader :download_dir
 
   # constructor, get the feed content
-  def initialize(twitter_username, shows, download_dir)
+  def initialize(shows, download_dir)
     @download_dir = download_dir
-    @twitter_username = twitter_username
-    @shows = shows.map { |show| show[:feed_pattern] }
+    @shows = shows
 
     @client = Transmission::Client.new(Settings::TRANSMISSION_SERVER)
     @client.start_server_if_not_running(Settings::TRANSMISSION_COMMAND)
@@ -53,26 +53,30 @@ class FeedMonitor
   end
 
   # iterate over the feed items and fetch them
-  def visit_feed
-    log("visiting tweets of #{@twitter_username}")
-    Twitter.user_timeline(@twitter_username, :count=>100).each do |tweet|
+  def visit_shows
+    log("fetching current eztv content")
+    html = Nokogiri::HTML(open("http://eztv.it"))
+    rows = html.xpath("//tr[@class='forum_header_border']")
+    rows.each do |row|
+      rowdoc = Nokogiri::HTML(row.to_s)
+      name = rowdoc.xpath("//a[@class='epinfo']").text
+      magnet = rowdoc.xpath("//a[@class='magnet']")[0]['href']
+
       @shows.each do |show|
-        if tweet.text =~ show and tweet.text =~ URL_REGEX
-          url = $1
-          log("'#{tweet.text}' at <#{url}>")
-          download_torrent(url) unless loadedBefore?(url)
+        if name =~ show[:feed_pattern]
+          log("'#{name}' at '#{magnet}>'")
+          download_magnet(magnet) unless loadedBefore?(magnet)
         end
       end
     end
   end
 
   # download the given torrent via btpd
-  def download_torrent(url)
-    torrent = open(url).read()
-    id = @client.add(torrent, @download_dir)
-    log("downloading torrent #{url} (##{id})")
+  def download_magnet(magnet)
+    id = @client.add(magnet, @download_dir)
+    log("downloading torrent #{magnet} (##{id})")
   rescue Exception => ex
-    log("unable to load torrent #{url}: #{ex}")
+    log("unable to load torrent #{magnet}: #{ex}")
   end
 
   # send a tweet with a link to each file in the given array
@@ -142,11 +146,9 @@ if __FILE__ == $0
   Dir.mkdir(download_dir) unless File.directory?(download_dir)
 
   # search all feeds for new torrents
-  feeds = Settings::FEEDS || raise('no torrent feed configuration!')
-  feeds.each do |twitter_username, shows|
-    fl = FeedMonitor.new(twitter_username, shows, download_dir)
-    fl.visit_feed
-  end
+  shows = Settings::SHOWS || raise('no shows configured!')
+  fl = FeedMonitor.new(shows, download_dir)
+  fl.visit_shows
 
   # check for torrents done downloading and tweet them
   client = Transmission::Client.new(Settings::TRANSMISSION_SERVER)
@@ -156,6 +158,6 @@ if __FILE__ == $0
   end
 
   # search for new downloaded torrents to be tweeted
-  fl = FeedMonitor.new(nil, [], download_dir)
+  fl = FeedMonitor.new(nil, download_dir)
   fl.tweet_new_files
 end
