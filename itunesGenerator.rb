@@ -59,11 +59,9 @@ end
 
 # main program, update the RSS files for each feed
 if __FILE__ == $0
-  feeds = Settings::FEEDS || raise('no feed configuration!')
-  feeds.each do |name, channels|
-    channels.select { |c| c.include?(:title) }.each do |channel|
-      rss = RssGenerator.new(Settings::DOWNLOAD_DIR, Settings::ITUNES_RSS_DIR, Settings::BASE_URL, channel)
-      rss.generate_rss_file
-    end
+  shows = Settings::SHOWS || raise('no shows configured!')
+  shows.select { |s| s.include?(:title) }.each do |channel|
+    rss = RssGenerator.new(Settings::DOWNLOAD_DIR, Settings::ITUNES_RSS_DIR, Settings::BASE_URL, channel)
+    rss.generate_rss_file
   end
 end
