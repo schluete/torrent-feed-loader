@@ -44,7 +44,7 @@ module Transmission
     # return a list of torrents currently down- or uploading
     def list()
       resp = request('torrent-get',
-                     :fields => ['id', 'name', 'isFinished', 'status', 'leftUntilDone'])
+                     :fields => ['id', 'name', 'isFinished', 'status', 'leftUntilDone', 'percentDone'])
       resp['torrents'] if resp
     end
 
@@ -64,7 +64,7 @@ module Transmission
     # delete all torrents which where completely downloaded
     def remove_finished_torrents
       list.each do |torrent|
-        remove(torrent['id']) if torrent['leftUntilDone'] == 0
+        remove(torrent['id']) if torrent['percentDone'] >= 1
       end
     end
 
